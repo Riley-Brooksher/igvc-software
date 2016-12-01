@@ -117,7 +117,7 @@ int main(int argc, char** argv)
         planning_mutex.lock();
         // TODO only replan if needed.
         Path <SearchLocation, SearchMove> path;
-        path = GraphSearch::AStar(search_problem, expanded_callback);
+        path = GraphSearch::DStarLite(search_problem, expanded_callback);
         if(act_path_pub.getNumSubscribers() > 0)
         {
             nav_msgs::Path disp_path_msg;

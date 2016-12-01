@@ -35,13 +35,24 @@ public:
     {
         return Start;
     }
+
+    SearchLocation getGoalState()
+    {
+        return Goal;
+    }
+
     std::list<SearchMove> getActions(SearchLocation state);
 
     SearchLocation getResult(SearchLocation state, SearchMove action);
 
     bool isGoal(SearchLocation state)
     {
-        return state.distTo(Goal) < GoalThreshold || state.distTo(Start) > 10;
+        return state.distTo(Goal) < GoalThreshold || state.distTo(Start) > 10; //line24
+    }
+
+    bool isStart(SearchLocation state)
+    {
+        return state.distTo(Start) < GoalThreshold || state.distTo(Goal) > 10; //line24
     }
 
     double getStepCost(SearchLocation, SearchMove action)
@@ -65,6 +76,11 @@ public:
     double getHeuristicCost(SearchLocation state)
     {
         return state.distTo(Goal);
+    }
+
+    double getHeuristicCostDStarLite(SearchLocation state)
+    {
+        return state.distTo(Start);
     }
 
     bool isActionValid(SearchMove& move, pcl::KdTreeFLANN<pcl::PointXYZ> &kdtree, SearchLocation start_state);

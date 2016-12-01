@@ -113,3 +113,4 @@ SearchLocation IGVCSearchProblem::getResult(SearchLocation state, SearchMove act
     }
     return result;
 }
+

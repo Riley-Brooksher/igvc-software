@@ -35,6 +35,32 @@ public:
     }
 };
 
+template <class StateType, class ActionType>
+class PathComparatorDStarLite
+{
+private:
+    SearchProblem<StateType, ActionType>* _problem;
+public:
+    PathComparatorDStarLite(SearchProblem<StateType, ActionType>* problem)
+    {
+        _problem = problem;
+    }
+
+    bool operator () (Path<StateType, ActionType>& p1, Path<StateType, ActionType>& p2)
+    {
+        double c1 = _problem->getPathCost(&p1);
+        double c2 = _problem->getPathCost(&p2);
+        double h1 = _problem->getHeuristicCostDStarLite(p1.getLastState());
+        double h2 = _problem->getHeuristicCostDStarLite(p2.getLastState());
+        c1 += h1;
+        c2 += h2;
+        if(c1 != c2){return(c1 > c2);}
+        c1 -= h1;
+        c2 -= h2;
+        return(c1 > c2);
+    }
+};
+
 template <class StateType, class ActionType, template <typename ...> class FrontierType>
 struct FrontierTraits
 {
@@ -181,6 +207,50 @@ public:
         Path<StateType, ActionType> empty;
         return empty;
     }
+
+    template <class StateType, class ActionType>
+    static Path<StateType, ActionType> DStarLite(SearchProblem<StateType,ActionType> &problem, void(*expandedCallback)(const set<StateType>&)){
+        set<StateType> expanded; //predecessors
+        priority_queue< Path<StateType, ActionType>, vector<Path<StateType, ActionType> >, PathComparator<StateType, ActionType> > frontier((PathComparator<StateType,ActionType>(&problem)));
+        
+        {
+            Path<StateType, ActionType> p;
+            p.addState(problem.getGoalState());
+            frontier.push(p);
+        }
+
+        auto iteration = 0;
+            while(!frontier.empty() && iteration < 6000)
+            {
+                Path<StateType, ActionType> path = frontier.top();
+                frontier.pop();
+
+                StateType last = path.getLastState();
+                if( expanded.insert(last).second) //inserts last, true if inserts successfully
+                {
+                    if(problem.isStart(last))
+                    {
+                        return path;
+                    }
+                    list<ActionType> legalActions = problem.getActions(last);
+                    for( typename list<ActionType>::iterator it = legalActions.begin(); it != legalActions.end(); it++)
+                    {
+                        ActionType action = (*it);
+                        StateType result = problem.getResult(last, action);
+                        Path<StateType, ActionType> newPath(path);
+                        newPath.addAction(action);
+                        newPath.addState(result);
+                        frontier.push(newPath);
+                    }
+                    iteration++;
+                    expandedCallback(expanded);
+                }
+            }
+        cout << __func__ << " Error: Could not find a solution." << endl;
+        Path<StateType, ActionType> empty;
+        return empty;
+        }
+
 };
 
 #endif // GRAPHSEARCH_HPP_INCLUDED
